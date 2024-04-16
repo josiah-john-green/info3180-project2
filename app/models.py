@@ -74,7 +74,7 @@ class Post(db.Model):
             return str(self.id)  # python 3 support
 
     def __repr__(self):
-        return '<post: %r>' % (self.id)
+        return '<Post: %r>' % (self.id)
 
 
 
@@ -88,6 +88,9 @@ class Like(db.Model):
     def __init__(self, post_id, user_id):
         self.post_id = post_id
         self.user_id = user_id
+    
+    def __repr__(self):
+        return '<Likes: %r>' % (self.id)
 
 
 
@@ -120,4 +123,4 @@ class Follow(db.Model):
             return str(self.id)  # python 3 support
 
     def __repr__(self):
-        return '<Follows %r>' % (self.id)
+        return '<Follow %r>' % (self.id)
