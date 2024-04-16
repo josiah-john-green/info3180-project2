@@ -24,8 +24,8 @@ class User(db.Model):
         
         self.username = username
         self.password = generate_password_hash(password, method="sha256")
-        self.firstname = first_name
-        self.lastname = last_name
+        self.firstname = firstname
+        self.lastname = lastname
         self.email = email
         self.location = location
         self.biography = biography
