@@ -1,18 +1,22 @@
 from flask import Flask, request, jsonify, session, redirect, url_for, flash, render_template
 from .models import User, Post, Like, Follow
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timezone
+from functools import wraps
 import jwt
-
 from app import app, db
 
-app = Flask(__name__)
+app = Flask(_name_)
 app.config['SECRET_KEY'] = 'your-secret-key'
+csrf = CSRFProtect(app)
 
 # API Routes
 
 @app.route('/api/v1/register', methods=['POST'])
 def register():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Invalid JSON data provided'}), 400
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -22,16 +26,18 @@ def register():
     location = data.get('location')
     biography = data.get('biography')
     profile_photo = data.get('profile_photo')
-    joined_on = datetime.utcnow()
+    joined_on = datetime.now(timezone.utc)
 
-    if not username or not email or not password:
+    if not all([username, password, email]):
         return jsonify({'error': 'Username, email, and password are required'}), 400
 
     existing_user = User.query.filter_by(email=email).first()
     if existing_user:
         return jsonify({'error': 'User with this email already exists'}), 409
+    
+    hashed_password = generate_password_hash(password)
 
-    new_user = User(username=username, password=generate_password_hash(password), firstname=firstname, lastname=lastname, email=email, location=location, biography=biography, profile_photo=profile_photo, joined_on=joined_on)
+    new_user = User(username=username, password=hashed_password, firstname=firstname, lastname=lastname, email=email, location=location, biography=biography, profile_photo=profile_photo, joined_on=joined_on)
     db.session.add(new_user)
     db.session.commit()
 
@@ -50,10 +56,37 @@ def login():
     token = jwt.encode({'user_id': user.id}, app.config['SECRET_KEY'], algorithm='HS256')
     return jsonify({'token': token})
 
+def token_required(func):
+    @wraps(func)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            user_id = data['user_id']
+            request.user_id = user_id
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
+
+        return func(*args, **kwargs)
+    
+    return decorated
+
+# Protected route using the token_required decorator
+@app.route('/protected-route')
+@token_required
+def protected_route():
+    user_id = request.user_id
+    # Route logic should go here
+
 @app.route('/api/v1/auth/logout', methods=['POST'])
 def logout():
-    # Implement logout functionality, e.g., clearing the session or token
-    return jsonify({'message': 'Logged out successfully'})
+    session.clear()
+    return jsonify({'message': 'Logged out successfully'}), 200
 
 @app.route('/api/v1/users/<int:user_id>/posts', methods=['POST'])
 def create_post(user_id):
@@ -61,7 +94,7 @@ def create_post(user_id):
     caption = data.get('caption')
     photo = data.get('photo')
 
-    post = Post(caption=caption, photo=photo, user_id=user_id, created_on=datetime.utcnow())
+    post = Post(caption=caption, photo=photo, user_id=user_id, created_on=datetime.now(timezone.utc))
     db.session.add(post)
     db.session.commit()
 
