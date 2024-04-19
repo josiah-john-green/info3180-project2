@@ -8,7 +8,6 @@ from app import app, db
 
 app = Flask(_name_)
 app.config['SECRET_KEY'] = 'your-secret-key'
-csrf = CSRFProtect(app)
 
 # API Routes
 
