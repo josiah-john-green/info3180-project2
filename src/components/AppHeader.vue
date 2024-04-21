@@ -19,6 +19,9 @@
             <li class="nav-item">
               <RouterLink to="/" class="nav-link active">Home</RouterLink>
             </li>
+            <!--<li class="nav-item">
+              <RouterLink to="/logout" class="nav-link active">Home</RouterLink>
+            </li>-->
           </ul>
         </div>
       </div>

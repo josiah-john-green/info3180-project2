@@ -12,7 +12,7 @@
 
       <div class="button">
         <router-link to="/register" class="btn blue">Register</router-link>
-        <router-link to="" class="btn green">Login</router-link>
+        <router-link to="/login" class="btn green">Login</router-link>
       </div>
     </div>
   </div>

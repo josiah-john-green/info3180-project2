@@ -5,8 +5,8 @@ from flask_wtf.csrf import generate_csrf
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
-from app.models import User
-from app.forms import RegistrationForm
+from app.models import User, Post
+from app.forms import RegistrationForm, LoginForm, PostForm
 from datetime import datetime, timezone
 
 
@@ -18,44 +18,142 @@ def index():
 # API route for user registration
 @app.route('/api/v1/register', methods=['POST'])
 def register():
-    form = RegistrationForm()
-    
-    if form.validate():
-        profile_photo = form.profile_photo.data
+    username = request.form.get('username')
+    password = request.form.get('password')
+    firstname = request.form.get('firstname')
+    lastname = request.form.get('lastname')
+    email = request.form.get('email')
+    location = request.form.get('location')
+    biography = request.form.get('biography')
+    profile_photo = request.files.get('profile_photo')
+
+    # Save the uploaded profile photo to a directory
+    if profile_photo:
         filename = secure_filename(profile_photo.filename)
         profile_photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    else:
+        filename = ''  # Set a default value if no profile photo is uploaded
 
-        user = User(
-            username=form.username.data, 
-            password=form.password.data, 
-            firstname=form.firstname.data, 
-            lastname=form.lastname.data, 
-            email=form.email.data, 
-            location=form.location.data, 
-            biography=form.biography.data, 
-            profile_photo=filename, 
-            joined_on=datetime.now()
-        )
-        
-        db.session.add(user)
-        db.session.commit()
+    user = User(
+        username=username,
+        password=password,
+        firstname=firstname,
+        lastname=lastname,
+        email=email,
+        location=location,
+        biography=biography,
+        profile_photo=filename
+    )
 
-        response_data = {
-            "message": "User successfully registered",
-            "username": form.username.data, 
-            "firstname": form.firstname.data, 
-            "lastname": form.lastname.data, 
-            "email": form.email.data, 
-            "location": form.location.data, 
-            "biography": form.biography.data, 
-            "profile_photo": filename, 
-            "joined_on": user.joined_on
-        }
-        return jsonify(response_data), 201
-        
+    db.session.add(user)
+    db.session.commit()
+
+    response_data = {
+        "message": "User successfully registered",
+        "username": username,
+        "firstname": firstname,
+        "lastname": lastname,
+        "email": email,
+        "location": location,
+        "biography": biography,
+        "profile_photo": filename,
+        "joined_on": user.joined_on
+    }
+    return jsonify(response_data), 201
+
+
+# API route for user login
+@app.route('/api/v1/auth/login', methods=['POST'])
+def login():
+    form = LoginForm()
+
+    if form.validate():
+        username = form.username.data
+        password = form.password.data
+
+        user = User.query.filter_by(username=username).first()
+
+        if user and check_password_hash(user.password, password):
+            return jsonify({'message': 'Login successful'}), 200
+        else:
+            return jsonify({'error': 'Invalid username or password'}), 401
     else:
         errors = form_errors(form)
         return jsonify({'errors': errors}), 400
+
+
+# API route to check if user exists
+@app.route('/api/v1/user/<username>', methods=['GET'])
+def check_user_exists(username):
+    # Query the database to check if the user exists
+    user = User.query.filter_by(username=username).first()
+
+    if user:
+        return jsonify({'exists': True}), 200
+    else:
+        return jsonify({'exists': False}), 404
+
+
+# API route to load user
+@login_manager.user_loader
+@login_required
+def load_user(username):
+    return User.query.filter_by(username=username).first()
+
+
+# API route for user logout
+@app.route('/api/v1/auth/logout', methods=['POST'])
+@login_required
+def logout():
+    logout_user()  # Assuming you're using Flask-Login for session management
+    return jsonify({'message': 'Logged out successfully'}), 200
+
+
+##
+# Functions for posts creation and retrival.
+##
+
+# API route to fetch user_id by username
+@app.route('/api/v1/users/<string:username>/id')
+def get_user_id(username):
+    user = User.query.filter_by(username=username).first()
+    if user:
+        return jsonify({'user_id': user.id})
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
+
+# API route for post creation
+@app.route('/api/v1/users/<int:user_id>/posts', methods=['POST'])
+@login_required
+def post(user_id):
+    caption = request.form.get('caption')
+    photo = request.files.get('photo')
+
+    # Save the uploaded profile photo to a directory
+    if photo:
+        filename = secure_filename(photo.filename)
+        photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    else:
+        filename = ''  # Set a default value if no profile photo is uploaded
+
+    # Create a new Post object and associate it with the user
+    post = Post(
+        caption=caption,
+        photo=filename,
+        user_id=user_id
+    )
+
+    db.session.add(post)  # Add the post to the database
+    db.session.commit()    # Commit the transaction
+
+    response_data = {
+        "message": "Post submitted successfully",
+        "caption": caption,
+        "photo": filename,
+        "post_id": post.id  # Optionally return the ID of the newly created post
+    }
+    return jsonify(response_data), 201
 
 
 ##
