@@ -1,20 +1,29 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from .config import Config
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect 
+from app.config import Config
+from app.logger import logger  # Import the logger
 from flask_login import LoginManager
 
+# Initialize Flask application
 app = Flask(__name__)
 app.config.from_object(Config)
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+
+# Use the logger
+logger.info("Flask application initialized.")
+
+# Instantiate CSRF-Protect library here
 csrf = CSRFProtect(app)
+
+# Initialize SQLAlchemy
+db = SQLAlchemy(app)
+
+# Instantiate Flask-Migrate library here
+migrate = Migrate(app, db)
+
+# Initialize LoginManager
 login_manager = LoginManager(app)
+login_manager.login_view = 'login'
 
-from app import views 
-from .models import User
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(user_id)
+from app import views

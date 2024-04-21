@@ -1,19 +1,61 @@
-<script setup>
-import { ref } from "vue";
-
-let message = ref("Hello World! This is a VueJS and Flask Starter Template.")
-
-</script>
-
 <template>
-    <div class="container">
-      <div class="text-center">
-        <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-        <h1>{{ message }}</h1>
+  <div class="startup-view">
+    <!-- Dynamically generate the poster URL using the photogram's poster filename -->
+    <div class="startup-image shadow bg-white rounded">
+      <img src="start-up-photo.jpeg" class="startup-photo rounded" alt="Startup Photo">
+    </div>
+
+    <div class="startup-details shadow p-3 mb-5 bg-white rounded">
+      <h4 class="startup-title"><i class=""></i>Photogram</h4>
+      <hr>
+      <p class="startup-description">Share photos of your favorite moments with friends, family, and the world</p>
+
+      <div class="button">
+        <router-link to="/register" class="btn blue">Register</router-link>
+        <router-link to="" class="btn green">Login</router-link>
       </div>
     </div>
+  </div>
 </template>
 
-<style>
-/* Add any component specific styles here */
+<style scoped>
+/* Add styling for the button */
+.startup-view {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin: 150px 55px 55px 55px;
+
+}
+
+.startup-image, .startup-details{
+  width: 100%;
+  height: 40%;    
+}
+
+.startup-photo{
+  width: 100%; /* Ensure the image fills the container */
+  height: 100%; /* Maintain aspect ratio */
+  object-fit: cover; /* Scale the image to cover the entire container */
+}
+
+/* Base button style */
+.button {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 30px 0 0 0;
+  cursor: pointer;
+}
+
+/* Button color variants */
+.blue {
+  background-color: #007bff;
+  color: white;
+}
+
+.green {
+  background-color: #17bd6d;
+  color: white;
+}
 </style>
