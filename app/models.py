@@ -1,37 +1,32 @@
-from app import db
-from datetime import datetime, timezone
+from datetime import datetime
+from . import db
 from werkzeug.security import generate_password_hash
 
-# Model for Users
+
 class User(db.Model):
-    __tablename__ = 'users'  # Specify the table name here
+    __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
-
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-
-    firstname = db.Column(db.String(80), nullable=False)
-    lastname = db.Column(db.String(80), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-
-    location = db.Column(db.String(100), nullable=False)
-    biography = db.Column(db.Text, nullable=False)
-
-    profile_photo = db.Column(db.String(255), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    password = db.Column(db.String(128), nullable=False)
+    firstname = db.Column(db.String(64), nullable=False)
+    lastname = db.Column(db.String(64), nullable=False)
+    email = db.Column(db.String(254), unique=True, nullable=False) 
+    location = db.Column(db.String(128), nullable=False)
+    biography = db.Column(db.String(255), nullable=False)
+    profile_photo = db.Column(db.String(128), nullable=False)
     joined_on = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    posts = db.relationship('Post', backref='user', lazy=True)
-
-    def __init__(self, username, password, firstname, lastname, email, location, biography, profile_photo):
+    def __init__(self, username, password, firstname, lastname, email, location, biography, profile_photo, joined_on):
         self.username = username
         self.password = generate_password_hash(password, method='pbkdf2:sha256')
         self.firstname = firstname
         self.lastname = lastname
         self.email = email
-        self.location = location 
+        self.location = location
         self.biography = biography
         self.profile_photo = profile_photo
+        self.joined_on = joined_on
 
     def is_authenticated(self):
         return True
@@ -49,25 +44,44 @@ class User(db.Model):
             return str(self.id)  # python 3 support
 
     def __repr__(self):
-        return f"User('{self.username}', '{self.profile_photo}')"
+        return '<User %r>' % (self.username)
+    
 
-
-# Model for Posts
 class Post(db.Model):
-    __tablename__ = 'posts'  # Specify the table name here
+    __tablename__ = 'posts'
 
-
-    id = db.Column(db.Integer, primary_key=True)
-    
-    caption = db.Column(db.String(255), nullable=False)
-    photo = db.Column(db.String(255), nullable=False)
-    
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    caption = db.Column(db.String(255))
+    photo = db.Column(db.String(255))
+    user_id = db.Column(db.Integer, nullable=False)
     created_on = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    # Define a method to associate each post with its user
-    def set_user(self, user):
-        self.user_id = user.id
+    def __init__(self, caption, photo, user_id, created_on):
+        self.caption = caption
+        self.photo = photo
+        self.user_id = user_id
+        self.created_on = created_on
 
-    def __repr__(self):
-        return f"Post(id={self.id}, caption='{self.caption}', user_id={self.user_id}, created_on='{self.created_on}')"
+
+class Like(db.Model):
+    __tablename__ = 'likes'
+
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    post_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
+
+    def __init__(self, post_id, user_id):
+        self.post_id = post_id
+        self.user_id = user_id
+
+
+class Follow(db.Model):
+    __tablename__ = 'follows'
+
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    follower_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
+
+    def __init__(self, follower_id, user_id):
+        self.follower_id = follower_id
+        self.user_id = user_id

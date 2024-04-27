@@ -8,7 +8,7 @@
     <div class="startup-details shadow p-3 mb-5 bg-white rounded">
       <h4 class="startup-title"><i class=""></i>Photogram</h4>
       <hr>
-      <p class="startup-description">Share photos of your favorite moments with friends, family, and the world</p>
+      <p class="startup-description">Share photos of your favorite moments with friends, family, and the world.</p>
 
       <div class="button">
         <router-link to="/register" class="btn blue">Register</router-link>
@@ -19,6 +19,8 @@
 </template>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Oleo+Script:wght@400;700&display=swap');
+
 /* Add styling for the button */
 .startup-view {
   display: grid;
@@ -31,6 +33,13 @@
 .startup-image, .startup-details{
   width: 100%;
   height: 40%;    
+}
+
+.startup-title{
+  font-family: 'Oleo Script', cursive; /* Use Oleo Script font */ 
+  text-align: center;
+  font-size: 30px;
+  padding: 10px;
 }
 
 .startup-photo{
@@ -50,12 +59,12 @@
 
 /* Button color variants */
 .blue {
-  background-color: #007bff;
+  background-color: #4a90e1;
   color: white;
 }
 
 .green {
-  background-color: #17bd6d;
+  background-color: #7dd220;
   color: white;
 }
 </style>

@@ -30,6 +30,6 @@ class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
 
-class PostForm(FlaskForm):
+class NewPostForm(FlaskForm):
     caption = StringField('Caption', validators=[DataRequired()])
     photo = FileField('Photo')
