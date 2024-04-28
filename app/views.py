@@ -226,26 +226,18 @@ def get_posts(user_id):
     return jsonify(post_list), 200
 
 
-# API route for viewing user posts and details
-@app.route('/api/v1/users/<user_id>', methods=['GET'])
+@app.route('/api/v1/users/<int:user_id>', methods=['GET'])
 @login_required
 @requires_auth
 def get_user_details(user_id):
 
+    # Ensure user_id is a valid integer
     user_details = db.session.execute(db.select(User).filter_by(id=int(user_id))).scalar()
-    
-    user_posts = db.session.execute(db.select(Post).filter_by(user_id=int(user_id))).scalars()
-    
-    posts = []
-    
-    for post in user_posts:
-        posts.append({
-            "id": post.id,
-            "user_id": post.user_id,
-            "photo": url_for('get_photo', filename=post.photo),
-            "description": post.caption,
-            "created_on": post.created_on,
-        })
+
+    if not user_details:
+        return jsonify({"error": "User not found"}), 404
+
+    # Return user details and other information
     return jsonify({
         "id": user_details.id,
         "username": user_details.username,
@@ -256,11 +248,18 @@ def get_user_details(user_id):
         "biography": user_details.biography,
         "profile_photo": url_for('get_photo', filename=user_details.profile_photo),
         "joined_on": user_details.joined_on.strftime('%B %Y'),
-        "posts": posts
+        "posts": [
+            {
+                "id": post.id,
+                "photo": url_for('get_photo', filename=post.photo),
+                "user_id": post.user_id,
+                "caption": post.caption,
+                "created_on": post.created_on
+            }
+            for post in db.session.execute(db.select(Post).filter_by(user_id=user_details.id)).scalars()
+        ],
     }), 200
-
     
-
 
 # API route for viewing all posts
 @app.route('/api/v1/posts', methods=['GET'])
@@ -327,29 +326,6 @@ def like(post_id):
         "message": message,
         "likes": likes_count
     }), 200
-
-
-
-# API route for follows
-@app.route('/api/users/<user_id>/follow', methods=['POST', 'GET'])
-@login_required
-@requires_auth
-def follow(user_id):
-    if request.method == 'POST':
-
-        """Create a Follow relationship between the current user and the target user."""
-        follow = Follow(user_id=user_id, follower_id=int(current_user.get_id()))
-        db.session.add(follow)
-        db.session.commit()
-        return jsonify({
-            "message": "You are now following that user."
-        }), 201
-
-    if request.method == 'GET':
-        follows = db.session.execute(db.select(Follow).filter_by(user_id=user_id)).scalars()
-        return jsonify({
-            "followers": len([follow for follow in follows])
-        }), 201
 
 
 ##

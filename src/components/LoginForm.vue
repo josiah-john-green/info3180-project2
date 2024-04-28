@@ -67,7 +67,7 @@
     .then(function (data) {
         if (data.message) {
             sessionStorage.setItem('jwt', data.token)
-            router.push({name: 'ExploreView'})
+            router.push({name: 'explore'})
             console.log(data);
         }
         if (data.errors) {
@@ -122,6 +122,12 @@
   background-color: #7dd220;
   text-decoration: none;
   border-radius: 5px;
+  transition: 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+.btn:hover {
+    background-color: #4a90e1;
 }
 
 .text-danger {

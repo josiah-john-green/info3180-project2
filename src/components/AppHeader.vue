@@ -2,7 +2,7 @@
   <header>
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
       <div class="container-fluid">
-        <a class="navbar-brand" href="/">Photogram</a>
+        <a class="navbar-brand" href="/"><i class="bi bi-camera"></i>Photogram</a>
         <button
           class="navbar-toggler"
           type="button"
@@ -23,7 +23,7 @@
               <RouterLink class="nav-link" to="/explore">Explore</RouterLink>
             </li>
             <li class="nav-item">
-              <RouterLink class="nav-link" to="/users/:user_id">My Profile </RouterLink>
+              <RouterLink class="nav-link" to="/user/:user_id">My Profile</RouterLink>
             </li>
             <li class="nav-item">
               <RouterLink class="nav-link" to="/logout">Logout</RouterLink>
@@ -37,7 +37,8 @@
 
 
 <script setup>
-  import { RouterLink } from "vue-router";
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 </script>
 
 <style>
@@ -53,6 +54,10 @@
 
 .navbar-nav{
   padding-right: 10px;
+}
+
+i{
+    padding-right: 5px;
 }
 
 </style>

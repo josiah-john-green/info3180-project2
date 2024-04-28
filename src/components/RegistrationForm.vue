@@ -125,7 +125,7 @@
       })
       .then(function (data) {
         if (data.message) {
-            router.push({name: 'AddLoginForm'})
+            router.push({name: 'login'})
             console.log(data);
         }
         if (data.errors) {
@@ -163,30 +163,36 @@
 </script>
 
 <style scoped>
-.registrationContainer{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f4eee5;
-}
+    .registrationContainer{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f4eee5;
+    }
 
-.registrationForm{
-    height: 50%;
-    width: 50%;
-}
+    .registrationForm{
+        height: 50%;
+        width: 50%;
+    }
 
-.btn {
-    display: inline-block;
-    padding: 7px 302px;
-    color: white;
-    background-color: #7dd220;
-    text-decoration: none;
-    border-radius: 5px;
-}
+    .btn {
+        display: inline-block;
+        padding: 7px 302px;
+        color: white;
+        background-color: #7dd220;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: 0.3s ease-in-out;
+        cursor: pointer;
+    }
 
-.text-danger {
-    margin-top: 5px;
-    font-size: 12px;
-  }
+    .btn:hover {
+        background-color: #4a90e1;
+    }
+
+    .text-danger {
+        margin-top: 5px;
+        font-size: 12px;
+    }
 
 </style>

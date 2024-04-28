@@ -63,25 +63,25 @@
     const token = sessionStorage.getItem('jwt')
 
     if (token == null){
-        return router.push({ name: 'AddLoginForm'})
+        return router.push({ name: 'login'})
     }
 
     // Decode the access token to retrieve user ID
     const tokenParts = token.split('.')
     const payload = JSON.parse(atob(tokenParts[1]))
-    const userid = payload['subject']
+    const user_id = payload['subject']
 
     // Create a FormData object for the POST request
     let postForm = document.getElementById('postForm');
     let form_data = new FormData(postForm);
 
     // Send POST request to create a new post
-    fetch(`/api/v1/users/${userid}/posts`, {
+    fetch(`/api/v1/users/${user_id}/posts`, {
       method: 'POST',
       body: form_data,
       headers: {
         'X-CSRFToken': csrf_token.value,
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${sessionStorage.getItem('jwt')}`
       }
     })
     .then(response => {
@@ -94,7 +94,7 @@
     })
     .then(data => {
         if (data.message) {
-            router.push({name: 'ExploreView'})
+            router.push({name: 'explore'})
             console.log(data);
         }
         if (data.errors) {
@@ -139,9 +139,15 @@
     display: inline-block;
     padding: 7px 300px;
     color: white;
+    background-color: #7dd220;
     text-decoration: none;
     border-radius: 5px;
-    background-color: #7dd220;
+    transition: 0.3s ease-in-out;
+    cursor: pointer;
+  }
+
+  .btn:hover {
+      background-color: #4a90e1;
   }
 
   .text-danger {

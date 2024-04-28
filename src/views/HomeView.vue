@@ -6,7 +6,7 @@
     </div>
 
     <div class="startup-details shadow p-3 mb-5 bg-white rounded">
-      <h4 class="startup-title"><i class=""></i>Photogram</h4>
+      <h4 class="startup-title"><i class="bi bi-camera"></i>Photogram</h4>
       <hr>
       <p class="startup-description">Share photos of your favorite moments with friends, family, and the world.</p>
 
@@ -48,6 +48,10 @@
   object-fit: cover; /* Scale the image to cover the entire container */
 }
 
+i{
+    padding-right: 5px;
+}
+
 /* Base button style */
 .button {
   display: grid;
@@ -61,10 +65,23 @@
 .blue {
   background-color: #4a90e1;
   color: white;
+  transition: 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+.blue:hover {
+  background-color: grey;
 }
 
 .green {
   background-color: #7dd220;
   color: white;
+  transition: 0.3s ease-in-out;
+  cursor: pointer;
 }
+
+.green:hover{
+  background-color: grey;
+}
+
 </style>
