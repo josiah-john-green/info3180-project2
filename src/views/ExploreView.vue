@@ -12,14 +12,17 @@
           <div class="post-description">
             <p class="post-caption">{{ post.caption }}</p>
             <div class="post-details">  
-                <p class="post-likes"><i class="bi bi-heart"></i>{{ post.likes }} likes</p>
-                <p class="post-date"><small class="text-muted">{{ post.created_on }}</small></p>
+                <div class="like-details">
+                    <i @click="toggleLike(post)" :class="[post.liked ? 'bi bi-heart-fill red' : 'bi bi-heart grey']"></i>
+                    <p class="post-likes">{{ post.likes }} likes</p>
+                </div>
+                <p class="post-date">{{ post.created_on }}</p>
             </div>
           </div>
         </div>
       </div>
   
-      <div class="post-btn">
+      <div class="button">
         <router-link to="/post/new" class="post btn"> New Post</router-link>
       </div>
     </div>
@@ -30,7 +33,19 @@
     import { ref, onMounted } from 'vue';
     import router from '../router/index.js';
 
-    const posts = ref([]);
+    let posts = ref([]);
+    let csrf_token = ref(''); // Reactive variable to store CSRF token
+
+    function getCsrfToken() {
+        fetch('/api/v1/csrf-token') // Endpoint to fetch CSRF token
+            .then((response) => response.json())
+            .then((data) => {
+                csrf_token.value = data.csrf_token; // Store the CSRF token
+            })
+            .catch((error) => {
+                console.error('Error fetching CSRF token:', error);
+            });
+    }
 
     function getPosts() {
         const token = sessionStorage.getItem('jwt');
@@ -43,7 +58,8 @@
         fetch('/api/v1/posts', {
             method: 'GET',
             headers: {
-            'Authorization': `Bearer ${token}`,
+                'X-CSRFToken': csrf_token.value, 
+                'Authorization': `Bearer ${token}`
             },
         })
         .then((response) => response.json())
@@ -55,11 +71,39 @@
         });
     }
 
+    function toggleLike(post) {
+
+        const token = sessionStorage.getItem('jwt');  
+
+        if (!token) {
+            router.push({ name: 'login' });
+            return;
+        }
+
+        fetch(`/api/v1/posts/${post.id}/like`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrf_token.value, // Include CSRF token
+                'Authorization': `Bearer ${token}`                
+            },
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data) {
+                post.liked = !post.liked; // Toggle the like status for this post
+                post.likes = data.likes; // Update the likes count
+            }
+        })
+        .catch((error) => {
+            console.error('Error liking the post:', error);
+        });
+    }
+
     onMounted(() => {
-        getPosts(); // Fetch user details on component mount
+        getCsrfToken(); // Fetch the CSRF token when the component mounts
+        getPosts();
     });
 </script>
-
 
   
 <style scoped>
@@ -72,7 +116,7 @@
     }
 
     .post-description{
-        padding: 15px;
+        padding: 30px 20px 20px 20px;
     }
 
     .post-view {
@@ -90,8 +134,15 @@
 
     .post-user {
         padding: 2px 2px 2px 10px;
-        text-decoration: none; /* Remove underline */
-        color: black; /* Set the color to black */
+        text-decoration: none; 
+        color: black; 
+    }
+
+    .post-date{
+        color: grey;
+        font-size: 15px;
+        font-weight: 600;
+        padding-top: 3px;
     }
 
     .post-profile_photo {
@@ -105,14 +156,22 @@
         flex-direction: row;
         justify-content: space-between;
         font-size: 15px;
-        padding-top: 10px;
+        padding: 30px 0 0 0;
     }
 
-    .like-btn{
-        background-color: transparent;
-        border: none;
+    .post-likes {
+        font-size: 15px; 
+        font-weight: 600;
+        color: gray; 
     }
 
+    .like-details {
+        display: inline-flex; 
+        flex-direction: row; 
+        align-items: center; 
+        justify-content: start;
+        text-align: left;
+    }
 
     .card-title {
         display: flex;
@@ -122,9 +181,17 @@
     }
 
     i{
-        padding-right: 10px;
+        padding: 0 13px 12.5px 0;
         cursor: pointer;
         font-size: 15px;
+    }
+
+    .red{
+        color: #e74c3c;    
+    }
+
+    .grey{
+        color: grey;    
     }
 
     .btn {

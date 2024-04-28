@@ -4,9 +4,11 @@
             <img :src="user.profile_photo" class="user-profile_photo"> 
 
             <div class="user-details">
-                <h3 class="user-name">{{ user.firstname }} {{ user.lastname }}</h3>
-                <p class="user-location">{{ user.location }}</p>
-                <p class="user-join">Member since {{ user.joined_on }}</p>
+                <h4 class="user-name">{{ user.firstname }} {{ user.lastname }}</h4>
+                <div class="user-locale">
+                    <p class="user-location">{{ user.location }}</p>
+                    <p class="user-join">Member since {{ user.joined_on }}</p>
+                </div>    
                 <p class="user-info">{{ user.biography }}</p>
             </div>
 
@@ -24,10 +26,10 @@
                 
                 <!-- Follow/Unfollow button with dynamic class and text -->
                 <button
-                   :class="['btn', isFollowing ? 'following' : 'follow']"
-                    @click="toggleFollow"
+                    @click="toggleFollow(user)"
+                    :class="[user.followed ? 'following' : 'follow']"
                 >
-                    {{ isFollowing ? 'Following' : 'Follow' }}
+                    {{ user.followed ? 'Following' : 'Follow' }}
                 </button>
             </div>       
         </div>
@@ -45,148 +47,212 @@
     import { useRoute } from 'vue-router';
     import router from '../router/index.js';
 
-    const route = useRoute();
-    const user_id = route.params.user_id;
+    let route = useRoute();
+    let user_id = route.params.user_id;
+    let users = ref([]); // List of users to display
 
     // State variables
     const user = ref({
-    firstname: '',
-    lastname: '',
-    location: '',
-    biography: '',
-    joined_on: '',
-    profile_photo: '',
-    posts: [],
+        firstname: '',
+        lastname: '',
+        location: '',
+        biography: '',
+        joined_on: '',
+        profile_photo: '',
+        posts: []
     });
 
-    const postCount = ref(0);
-    const isFollowing = ref(false); // Whether the current user is following
-    const followerCount = ref(0); // Default to zero
+    let postCount = ref(0);
+    let isFollowing = ref(false); // Whether the current user is following
+    let followerCount = ref(0); // Default to zero
+    let csrf_token = ref(''); // Reactive variable to store CSRF token
+
+    function getCsrfToken() {
+        fetch('/api/v1/csrf-token') // Endpoint to fetch CSRF token
+            .then((response) => response.json())
+            .then((data) => {
+                csrf_token.value = data.csrf_token; // Store the CSRF token
+            })
+            .catch((error) => {
+                console.error('Error fetching CSRF token:', error);
+            });
+    }
 
     // Function to get user details and initialize follower count
     function getUserDetails() {
-    const token = sessionStorage.getItem('jwt');
+        const token = sessionStorage.getItem('jwt');
 
-    if (!token) {
-        router.push({ name: 'login' }); // Redirect if JWT is missing
-        return;
+        if (!token) {
+            router.push({ name: 'login' }); // Redirect if JWT is missing
+            return;
+        }
+
+        fetch(`/api/v1/users/${user_id}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': csrf_token.value, 
+                'Authorization': `Bearer ${token}`
+            },
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            user.value = data;
+            postCount.value = data.posts.length;
+        })
+        .catch((error) => {
+            console.error('Error fetching user details:', error);
+        });
     }
 
-    fetch(`/api/v1/users/${user_id}`, {
-        method: 'GET',
-        headers: {
-        'Authorization': `Bearer ${sessionStorage.getItem('jwt')}`, // Ensure JWT
-        },
-    })
-    .then((response) => response.json())
-    .then((data) => {
-        user.value = data;
-        postCount.value = data.posts.length;
-    })
-    .catch((error) => {
-        console.error('Error fetching user details:', error);
-    });
+    function toggleFollow(user) {
+        const token = sessionStorage.getItem('jwt');
+
+        fetch(`/api/v1/users/${user.id}/follow`, {
+            method: 'POST',
+            headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token.value, 
+            },
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.message) {
+            user.followed = !user.followed; // Toggle the follow status
+            // Fetch updated follower count
+            getFollowerCount(user);
+            }
+        })
+        .catch((error) => {
+            console.error('Error following/unfollowing:', error);
+        });
+
     }
 
-    const toggleFollow = () => {
-    isFollowing.value = !isFollowing.value; // Toggle the state
-    };
+    function getFollowerCount(user) {
+        const token = sessionStorage.getItem('jwt');
+
+        fetch(`/api/v1/users/${user.id}/follow`, {
+            method: 'GET',
+            headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf_token.value, // Include CSRF token
+            },
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            console.log(`Follower count: ${data.followers}`); // Log the follower count
+        })
+        .catch((error) => {
+            console.error('Error getting follower count:', error);
+        });
+    }
 
     onMounted(() => {
-    getUserDetails(); // Fetch user details on component mount
+        getUserDetails(); // Fetch user details on component mount
+        getCsrfToken();
     });
 </script>
 
 
 
 <style scoped>
-.profileContainer {
-    margin: 55px;
-    background-color: #f4eee5;
-}
+    .profileContainer {
+        margin: 55px;
+        background-color: #f4eee5;
+    }
 
-.profileHeader {
-    display: grid;
-    grid-template-columns: 50px 800px 50px;
-    gap: 100px;
-}
+    .profileHeader {
+        display: grid;
+        grid-template-columns: 50px 750px 50px;
+        gap: 100px;
+    }
 
-.user-name {
-    font-weight: 400;
-}
+    .profileBody {
+        display: grid;
+        grid-template-columns: repeat(3, 200px);
+        column-gap: 240px;
+        row-gap: 25px;
+    }
 
-.user-location {
-    padding-top: 10px;
-}
+    .user-details {
+        padding: 10px 10px 10px 100px;
+    }
 
-.user-join {
-    padding-bottom: 10px;    
-}
+    .user-profile_photo {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+    }
 
-.profileBody {
-    display: grid;
-    grid-template-columns: repeat(3, 200px);
-    column-gap: 240px;
-    row-gap: 25px;
-}
+    .user-name {
+        font-weight: 650;
+    }
 
-.post-photo {
-    width: 400px;
-    height: 400px;
-}
+    .user-locale{
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0 20px 0;
+        line-height: 0.75;
+        font-size: 14.5px;
+    }
 
-.user-details {
-    padding: 0px 0px 0px 100px;
-}
+    .user-info{
+        font-size: 14.5px;        
+    }
 
-.user-profile_photo {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-}
+    .post-photo {
+        width: 400px;
+        height: 400px;
+    }
 
-.social-details {
-    text-align: center;
-}
+    .follower-no, .post-no {
+        font-size: 20px;
+    }
 
-.social {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 50px;
-    padding-bottom: 25px;
-}
+    .follower-title, .post-title {
+        font-size: 15px;
+        color: rgb(186, 186, 186);
+        font-weight: 500;
+    }
 
-.follower-no, .post-no {
-    font-size: 20px;
-}
+    .social-details {
+        padding: 10px; /* Match button padding to ensure consistency */
+        text-align: center;
+        align-items: center;
+    }
 
-.follower-title, .post-title {
-    font-size: 15px;
-    color: rgb(186, 186, 186);
-}
+    .social {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 80px;
+        padding-bottom: 25px;
+    }
 
-.follow {
-  background-color: #e18e4a; 
-  color: white;
-}
+    button {
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        padding: 10px 95px; 
+        color: white; 
+        width: 100px;
+        font-size: 16px; 
+        font-weight: 500; 
+        border: none; 
+        border-radius: 5px; 
+        white-space: nowrap; 
+        overflow: hidden; 
+        cursor: pointer; 
+    }
 
-.following {
-  background-color: #7dd220; 
-  color: white;
-}
+    button.follow {
+        background-color: #4a90e1; 
+    }
 
-.btn {
-    padding: 7px 55px;
-    color: white;
-    background-color: #4a90e1;
-    text-decoration: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: 0.3s ease-in-out;
-}
+    button.following {
+    background-color: #7dd220; 
+    }
 
-.btn:hover {
-    background-color: #7dd220;
-}
 </style>

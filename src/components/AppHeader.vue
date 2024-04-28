@@ -37,27 +37,26 @@
 
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Oleo+Script:wght@400;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Oleo+Script:wght@400;700&display=swap');
 
-.navbar {
-  background-color: #4a90e1;
-}
+  .navbar {
+    background-color: #4a90e1;
+  }
 
-.navbar-brand{
-  font-family: 'Oleo Script', cursive; /* Use Oleo Script font */
-}
+  .navbar-brand{
+    font-family: 'Oleo Script', cursive; /* Use Oleo Script font */
+  }
 
-.navbar-nav{
-  padding-right: 10px;
-}
+  .navbar-nav{
+    padding-right: 10px;
+  }
 
-i{
-    padding-right: 5px;
-}
+  i{
+      padding-right: 5px;
+  }
 
 </style>

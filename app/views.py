@@ -17,6 +17,7 @@ from flask import render_template, request, jsonify, send_file, session, send_fr
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
+from sqlalchemy import func
 from app.forms import LoginForm, RegistrationForm, NewPostForm
 from app.models import User, Post, Follow, Like
 from flask_wtf.csrf import generate_csrf
@@ -301,30 +302,78 @@ def get_all_posts():
 @login_required
 @requires_auth
 def like(post_id):
-    """Toggle like/unlike on the current Post by the logged-in User"""
-    user_id = int(current_user.get_id())
-    
+    user_id = int(current_user.get_id())  # Get the current user's ID
+
     # Check if the user has already liked the post
     like = db.session.execute(db.select(Like).filter_by(post_id=post_id, user_id=user_id)).scalar()
 
     if like:
-        # Unlike the post if the user has already liked it
+        # If already liked, remove the like
         db.session.delete(like)
         db.session.commit()
         message = "Post unliked!"
     else:
-        # Like the post if the user hasn't liked it yet
-        like = Like(post_id=post_id, user_id=user_id)
-        db.session.add(like)
+        # If not liked yet, add a like
+        new_like = Like(post_id=post_id, user_id=user_id)
+        db.session.add(new_like)
         db.session.commit()
         message = "Post liked!"
 
-    # Get updated likes count for the post
+    # Get the updated count of likes for the post
     likes_count = db.session.execute(db.select(func.count(Like.id)).filter_by(post_id=post_id)).scalar()
 
     return jsonify({
         "message": message,
         "likes": likes_count
+    }), 200
+
+
+# API route for following a user
+@app.route('/api/v1/users/<int:user_id>/follow', methods=['POST'])
+@login_required
+@requires_auth
+def follow_user(user_id):
+    # Get the current user's ID
+    follower_id = int(current_user.get_id())
+
+    # Prevent users from following themselves
+    if follower_id == user_id:
+        return jsonify({
+            "message": "You cannot follow yourself."
+        }), 400  # Return a 400 Bad Request status
+
+    # Check if the current user is already following the target user
+    existing_follow = db.session.query(Follow).filter_by(
+        follower_id=follower_id,
+        user_id=user_id,
+    ).first()
+
+    if existing_follow:
+        # If already following, unfollow
+        db.session.delete(existing_follow)
+        db.session.commit()
+        return jsonify({
+            "message": "You have unfollowed the user.",
+        }), 200
+    else:
+        # If not following, follow the user
+        new_follow = Follow(follower_id=follower_id, user_id=user_id)
+        db.session.add(new_follow)
+        db.session.commit()
+        return jsonify({
+            "message": "You are now following the user.",
+        }), 201
+
+
+# API route for counting followers 
+@app.route('/api/v1/users/<int:user_id>/follow', methods=['GET'])
+@login_required
+def get_follower_count(user_id):
+    # Count the number of followers for the target user
+    follower_count = db.session.query(Follow).filter_by(user_id=user_id).count()
+
+    return jsonify({
+        "followers": follower_count,
     }), 200
 
 
