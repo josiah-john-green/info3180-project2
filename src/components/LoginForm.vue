@@ -66,7 +66,7 @@
     })
     .then(function (data) {
         if (data.message) {
-            sessionStorage.setItem('jwt', data.token)
+            localStorage.setItem('jwt', data.token)
             router.push({name: 'explore'})
             console.log(data);
         }

@@ -22,8 +22,8 @@
             <li class="nav-item">
               <RouterLink class="nav-link" to="/explore">Explore</RouterLink>
             </li>
-            <li class="nav-item">
-              <RouterLink class="nav-link" to="/user/:user_id">My Profile</RouterLink>
+            <li class="nav-item" @click="goToProfile">
+              <RouterLink class="nav-link" :to="`/user/${user_id}`">My Profile</RouterLink>
             </li>
             <li class="nav-item">
               <RouterLink class="nav-link" to="/logout">Logout</RouterLink>
@@ -35,9 +35,41 @@
   </header>
 </template>
 
-
 <script setup>
+import { ref } from "vue"; // Use ref for reactive variables
+import { useRouter } from "vue-router"; // Ensure router is used
 
+// Initialize the router for navigation
+const router = useRouter(); 
+
+// Reactive variable for storing the user ID
+const userId = ref(''); 
+
+// Retrieve JWT from local storage
+const token = localStorage.getItem("jwt");
+
+// Check if token exists
+console.log(token);
+
+function goToProfile() {
+
+  if (token) {
+    // Decode the JWT and extract the user ID
+    const tokenParts = token.split(".");
+    const payload = JSON.parse(atob(tokenParts[1])); // Decode Base64 to JSON
+
+    // Get the user ID from the JWT
+    userId.value = payload["subject"]; 
+
+    console.log(userId);
+
+    // Navigate to the profile page with the correct user_id
+    router.push({ name: "profile", params: { user_id: userId.value } });
+  } else {
+    // Redirect to the login page if JWT is missing
+    router.push({ name: "login" });
+  }
+}
 </script>
 
 <style>

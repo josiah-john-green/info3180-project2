@@ -27,7 +27,7 @@ from flask_wtf.csrf import generate_csrf
 # Functions for authorisation.
 ##
 
-#
+# 
 def requires_auth(f):
   @wraps(f)
   def decorated(*args, **kwargs):
@@ -147,13 +147,18 @@ def login():
 
 # Define the logout route
 @app.route('/api/v1/auth/logout', methods=['POST'])
-@login_required 
+@login_required  # Ensure the user is logged in to log out
 def logout():
+    try:
+        # Perform logout operations
+        logout_user()  # Log out the user
+        
+        # Return a success message
+        return jsonify({"message": "User successfully logged out."}), 200
 
-    logout_user()
-
-    # Return a success message
-    return jsonify({'message': 'User successfully logged out.'}), 200
+    except Exception as e:
+        # Handle any unexpected errors
+        return jsonify({"error": "Logout failed", "details": str(e)}), 500
 
 
 ##
@@ -293,7 +298,7 @@ def get_all_posts():
 
 
 ##
-# Functions for likes and follows.
+# Functions for likes.
 ##
 
 
@@ -328,41 +333,70 @@ def like(post_id):
     }), 200
 
 
-# API route for following a user
-@app.route('/api/v1/users/<int:user_id>/follow', methods=['POST'])
+@app.route('/api/v1/posts/<int:post_id>/likes', methods=['GET'])
 @login_required
-@requires_auth
-def follow_user(user_id):
-    # Get the current user's ID
-    follower_id = int(current_user.get_id())
+def get_post_likes(post_id):
+    # Get all likes for the post
+    likes = db.session.query(Like).filter_by(post_id=post_id).all()
 
-    # Prevent users from following themselves
-    if follower_id == user_id:
-        return jsonify({
-            "message": "You cannot follow yourself."
-        }), 400  # Return a 400 Bad Request status
+    # Get the current user ID
+    current_user_id = int(current_user.get_id())
 
-    # Check if the current user is already following the target user
-    existing_follow = db.session.query(Follow).filter_by(
-        follower_id=follower_id,
-        user_id=user_id,
-    ).first()
+    # Check if the current user has liked this post
+    user_likes = any(like.user_id == current_user_id for like in likes)
+
+    # Return the total like count and whether the current user liked the post
+    return jsonify({
+        "likes": len(likes),
+        "user_likes": user_likes
+    })
+
+
+# API route for checking if a user has liked a post
+@app.route('/api/v1/posts/<int:post_id>/like_status', methods=['GET'])
+@login_required
+def get_like_status(post_id):
+    try:
+        # Check if the current user has liked the specified post
+        has_liked = Like.query.filter_by(
+            user_id=current_user.id,
+            post_id=post_id
+        ).first() is not None  # Determine if there's a like record for the user and post
+        
+        # Return the like status
+        return jsonify({"has_liked": has_liked}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500  # Handle errors and return a 500 status code
+
+
+##
+# Functions for follow.
+##
+
+
+# API route for following a user
+@app.route('/api/v1/users/<user_id>/follow', methods=['POST'])
+@login_required
+def follow(user_id):
+    current_user_id = int(current_user.get_id())
+
+    if current_user_id == int(user_id):
+        return jsonify({"error": "You can't follow yourself."}), 400
+
+    # Check if the follow relationship already exists
+    existing_follow = db.session.query(Follow).filter_by(follower_id=current_user_id, user_id=user_id).first()
 
     if existing_follow:
-        # If already following, unfollow
-        db.session.delete(existing_follow)
+        db.session.delete(existing_follow)  # Unfollow if already following
         db.session.commit()
-        return jsonify({
-            "message": "You have unfollowed the user.",
-        }), 200
-    else:
-        # If not following, follow the user
-        new_follow = Follow(follower_id=follower_id, user_id=user_id)
-        db.session.add(new_follow)
-        db.session.commit()
-        return jsonify({
-            "message": "You are now following the user.",
-        }), 201
+        return jsonify({"message": "Unfollowed successfully."})
+
+    # Create a new follow relationship if not following
+    new_follow = Follow(follower_id=current_user_id, user_id=user_id)
+    db.session.add(new_follow)
+    db.session.commit()
+
+    return jsonify({"message": "You are now following that user."})
 
 
 # API route for counting followers 
@@ -377,6 +411,20 @@ def get_follower_count(user_id):
     }), 200
 
 
+# API route for checking the following status
+@app.route('/api/v1/users/<int:user_id>/follow_status', methods=['GET'])
+@login_required
+def follow_status(user_id):
+    try:
+        user_to_check = User.query.get_or_404(user_id)  # Fetch the user
+        is_following = Follow.query.filter_by(
+            follower_id=current_user.id,
+            user_id=user_to_check.id
+        ).first() is not None  # Check if the current user follows the target user
+        return jsonify({"is_following": is_following}), 200  # Return the follow status
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500  # Handle errors
+
 ##
 # Functions for token creation in API's and Web Forms.
 ##
@@ -388,7 +436,7 @@ def get_csrf():
     return jsonify({'csrf_token': generate_csrf()})
 
 
-
+# API route for 
 def generate_token(uid):
     timestamp = datetime.utcnow()
     payload = {

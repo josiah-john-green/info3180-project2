@@ -47,9 +47,16 @@
     import { useRoute } from 'vue-router';
     import router from '../router/index.js';
 
+    // Reactive variables
     let route = useRoute();
     let user_id = route.params.user_id;
-    let users = ref([]); // List of users to display
+    
+    let postCount = ref(0);
+
+    let isFollowing = ref(false); 
+    let followerCount = ref(0);
+
+    let csrf_token = ref(''); 
 
     // State variables
     const user = ref({
@@ -61,11 +68,6 @@
         profile_photo: '',
         posts: []
     });
-
-    let postCount = ref(0);
-    let isFollowing = ref(false); // Whether the current user is following
-    let followerCount = ref(0); // Default to zero
-    let csrf_token = ref(''); // Reactive variable to store CSRF token
 
     function getCsrfToken() {
         fetch('/api/v1/csrf-token') // Endpoint to fetch CSRF token
@@ -80,7 +82,7 @@
 
     // Function to get user details and initialize follower count
     function getUserDetails() {
-        const token = sessionStorage.getItem('jwt');
+        const token = localStorage.getItem('jwt');
 
         if (!token) {
             router.push({ name: 'login' }); // Redirect if JWT is missing
@@ -98,6 +100,8 @@
         .then((data) => {
             user.value = data;
             postCount.value = data.posts.length;
+            followerCount.value = data.followers.length; // Update follower count
+            isFollowing.value = data.followers.some((f) => f.user_id === user_id); // Set followed state
         })
         .catch((error) => {
             console.error('Error fetching user details:', error);
@@ -105,7 +109,7 @@
     }
 
     function toggleFollow(user) {
-        const token = sessionStorage.getItem('jwt');
+        const token = localStorage.getItem('jwt');
 
         fetch(`/api/v1/users/${user.id}/follow`, {
             method: 'POST',
@@ -118,9 +122,8 @@
         .then((response) => response.json())
         .then((data) => {
             if (data.message) {
-            user.followed = !user.followed; // Toggle the follow status
-            // Fetch updated follower count
-            getFollowerCount(user);
+                user.followed = !user.followed; 
+                getFollowerCount(user);
             }
         })
         .catch((error) => {
@@ -130,7 +133,7 @@
     }
 
     function getFollowerCount(user) {
-        const token = sessionStorage.getItem('jwt');
+        const token = localStorage.getItem('jwt');
 
         fetch(`/api/v1/users/${user.id}/follow`, {
             method: 'GET',
@@ -142,7 +145,9 @@
         })
         .then((response) => response.json())
         .then((data) => {
-            console.log(`Follower count: ${data.followers}`); // Log the follower count
+            followerCount.value = data.followers; // Set the like count
+            isFollowing.value = data.followed; // Check if the current user liked the post
+            console.log(`Follower count: ${followerCount.value}`); // Log the follower count
         })
         .catch((error) => {
             console.error('Error getting follower count:', error);
@@ -154,7 +159,6 @@
         getCsrfToken();
     });
 </script>
-
 
 
 <style scoped>

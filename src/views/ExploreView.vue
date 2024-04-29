@@ -48,7 +48,7 @@
     }
 
     function getPosts() {
-        const token = sessionStorage.getItem('jwt');
+        const token = localStorage.getItem('jwt');
 
         if (!token) {
             router.push({ name: 'login' });
@@ -73,7 +73,7 @@
 
     function toggleLike(post) {
 
-        const token = sessionStorage.getItem('jwt');  
+        const token = localStorage.getItem('jwt');  
 
         if (!token) {
             router.push({ name: 'login' });

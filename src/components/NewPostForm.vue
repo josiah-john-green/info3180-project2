@@ -60,7 +60,7 @@
   function savePost() {
 
     // Retrieve the access token from local storage
-    const token = sessionStorage.getItem('jwt')
+    const token = localStorage.getItem('jwt')
 
     if (token == null){
         return router.push({ name: 'login'})
@@ -81,7 +81,7 @@
       body: form_data,
       headers: {
         'X-CSRFToken': csrf_token.value,
-        'Authorization': `Bearer ${sessionStorage.getItem('jwt')}`
+        'Authorization': `Bearer ${token}`
       }
     })
     .then(response => {
