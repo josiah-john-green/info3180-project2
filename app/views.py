@@ -208,6 +208,51 @@ def add_post(user_id):
     errors = form_errors(postForm)
     return jsonify(errors=errors), 400
 
+# Route to get a specific post by its ID
+@app.route('/api/v1/posts/<int:post_id>', methods=['GET'])
+@login_required
+@requires_auth
+def get_post_with_user(post_id):
+    try:
+        # Fetch the post and user details
+        post = db.session.execute(
+            db.select(Post).filter_by(id=post_id)
+        ).scalar()
+
+        if not post:
+            return jsonify({"error": "Post not found"}), 404
+
+        user = db.session.execute(
+            db.select(User).filter_by(id=post.user_id)
+        ).scalar()
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Check if the current user has liked the post
+        user_has_liked = (
+            db.session.execute(
+                db.select(Like).filter_by(post_id=post_id, user_id=current_user.id)
+            ).scalar() is not None
+        )
+
+        # Prepare the post data with user information
+        post_data = {
+            "id": post.id,
+            "photo": url_for("get_photo", filename=post.photo),
+            "caption": post.caption,
+            "created_on": post.created_on.strftime("%d %B %Y"),
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "profile_photo": url_for("get_photo", filename=user.profile_photo),
+            },
+        }
+
+        return jsonify(post_data), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # API route for a specific person's posts
 @app.route('/api/v1/users/<int:user_id>/posts', methods=['GET'])
@@ -354,7 +399,7 @@ def get_like_status(post_id):
         
         # Return the like status
         return jsonify({"has_liked": has_liked}), 200
-        
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500  # Handle errors and return a 500 status code
 

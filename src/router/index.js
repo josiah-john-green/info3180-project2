@@ -6,6 +6,7 @@ import AddLogoutView from '../views/AddLogoutView.vue';
 import ExploreView from '../views/ExploreView.vue';
 import AddNewPostFormView from '../views/AddNewPostFormView.vue';
 import ProfileView from '../views/ProfileView.vue';
+import PostFormView from '../views/PostFormView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL), // Ensure this is set up correctly
@@ -39,6 +40,11 @@ const router = createRouter({
       path: '/post/new',
       name: 'post',
       component: AddNewPostFormView,
+    },
+    {
+      path: '/post/:post_id',
+      name: 'profilepost',
+      component: PostFormView,
     },
     {
       path: '/users/:user_id', // Ensure this path matches with your intention

@@ -36,7 +36,9 @@
 
         <div class="profileBody">
             <div class="post-grid" v-for="post in user.posts" :key="post.id">                  
-                <img :src="post.photo" class="post-photo"> 
+                <RouterLink :to="{ name: 'profilepost', params: { post_id: post.id } }">
+                  <img :src="post.photo" class="post-photo" alt="Post Image" />
+                </RouterLink>
             </div>
         </div>  
     </div>
