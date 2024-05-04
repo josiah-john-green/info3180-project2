@@ -26,7 +26,7 @@
                 
                 <!-- Follow/Unfollow button with dynamic class and text -->
                 <button
-                    @click="toggleFollow(user)"
+                    @click="toggleFollow()"
                     :class="[user.followed ? 'following' : 'follow']"
                 >
                     {{ user.followed ? 'Following' : 'Follow' }}
@@ -43,121 +43,128 @@
 </template>
 
 <script setup>
-    import { ref, onMounted } from "vue";
-    import { useRoute } from 'vue-router';
-    import router from '../router/index.js';
+import { ref, onMounted } from "vue";
+import { useRoute } from 'vue-router';
+import router from '../router/index.js';
 
-    // Reactive variables
-    let route = useRoute();
-    let user_id = route.params.user_id;
-    
-    let postCount = ref(0);
+const route = useRoute();
+const user_id = route.params.user_id;
 
-    let isFollowing = ref(false); 
-    let followerCount = ref(0);
+const postCount = ref(0);
+const isFollowing = ref(false);
+const followerCount = ref(0);
 
-    let csrf_token = ref(''); 
+const csrf_token = ref(""); // CSRF token
 
-    // State variables
-    const user = ref({
-        firstname: '',
-        lastname: '',
-        location: '',
-        biography: '',
-        joined_on: '',
-        profile_photo: '',
-        posts: []
+const user = ref({
+  firstname: '',
+  lastname: '',
+  location: '',
+  biography: '',
+  joined_on: '',
+  profile_photo: '',
+  posts: [],
+});
+
+function getCsrfToken() {
+  fetch('/api/v1/csrf-token')
+    .then((response) => response.json())
+    .then((data) => {
+      csrf_token.value = data.csrf_token;
+    })
+    .catch((error) => {
+      console.error('Error fetching CSRF token:', error);
     });
+}
 
-    function getCsrfToken() {
-        fetch('/api/v1/csrf-token') // Endpoint to fetch CSRF token
-            .then((response) => response.json())
-            .then((data) => {
-                csrf_token.value = data.csrf_token; // Store the CSRF token
-            })
-            .catch((error) => {
-                console.error('Error fetching CSRF token:', error);
-            });
-    }
+function getFollowStatus() {
+  const token = localStorage.getItem("jwt");
 
-    // Function to get user details and initialize follower count
-    function getUserDetails() {
-        const token = localStorage.getItem('jwt');
+  if (!token) {
+    router.push({ name: 'login' });
+    return;
+  }
 
-        if (!token) {
-            router.push({ name: 'login' }); // Redirect if JWT is missing
-            return;
+  fetch(`/api/v1/users/${user_id}/follow_status`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem("jwt")}`,
+      'X-CSRFToken': csrf_token.value,
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+        isFollowing.value = data.is_following; // Set follow status
+        console.log(data.is_following);
+    })
+    .catch((error) => {
+      console.error("Error fetching follow status:", error);
+    });
+}
+
+function getUserDetails() {
+  const token = localStorage.getItem("jwt");
+
+  if (!token) {
+    router.push({ name: 'login' });
+    return;
+  }
+
+  fetch(`/api/v1/users/${user_id}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem("jwt")}`,
+      'X-CSRFToken': csrf_token.value,
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      user.value = data;
+      postCount.value = data.posts.length;
+      followerCount.value = data.followers.length;
+
+      // Update `isFollowing` based on current user's follow status
+      const currentUserID = JSON.parse(atob(token.split(".")[1])).subject; // Ensure correct key
+      isFollowing.value = data.followers.some(
+        (f) => f.user_id === currentUserID
+      );
+    })
+    .catch((error) => {
+      console.error("Error fetching user details:", error);
+    });
+}
+
+function toggleFollow() {
+  const token = localStorage.getItem("jwt");
+
+  fetch(`/api/v1/users/${user_id}/follow`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem("jwt")}`,
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrf_token.value,
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+        if(data.message){
+            isFollowing.value = !isFollowing.value; // Toggle follow status
         }
-
-        fetch(`/api/v1/users/${user_id}`, {
-            method: 'GET',
-            headers: {
-                'X-CSRFToken': csrf_token.value, 
-                'Authorization': `Bearer ${token}`
-            },
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            user.value = data;
-            postCount.value = data.posts.length;
-            followerCount.value = data.followers.length; // Update follower count
-            isFollowing.value = data.followers.some((f) => f.user_id === user_id); // Set followed state
-        })
-        .catch((error) => {
-            console.error('Error fetching user details:', error);
-        });
-    }
-
-    function toggleFollow(user) {
-        const token = localStorage.getItem('jwt');
-
-        fetch(`/api/v1/users/${user.id}/follow`, {
-            method: 'POST',
-            headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrf_token.value, 
-            },
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.message) {
-                user.followed = !user.followed; 
-                getFollowerCount(user);
-            }
-        })
-        .catch((error) => {
-            console.error('Error following/unfollowing:', error);
-        });
-
-    }
-
-    function getFollowerCount(user) {
-        const token = localStorage.getItem('jwt');
-
-        fetch(`/api/v1/users/${user.id}/follow`, {
-            method: 'GET',
-            headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrf_token.value, // Include CSRF token
-            },
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            followerCount.value = data.followers; // Set the like count
-            isFollowing.value = data.followed; // Check if the current user liked the post
-            console.log(`Follower count: ${followerCount.value}`); // Log the follower count
-        })
-        .catch((error) => {
-            console.error('Error getting follower count:', error);
-        });
-    }
-
-    onMounted(() => {
-        getUserDetails(); // Fetch user details on component mount
-        getCsrfToken();
+    })
+    .catch((error) => {
+      console.error("Error following/unfollowing:", error);
     });
+}
+
+onMounted(() => {
+    if (!user_id) { // Check if `user_id` is undefined
+        router.push({ name: 'login' }); // Redirect to login if undefined
+        return; // Exit early to avoid further errors
+    }
+    getCsrfToken(); 
+    getUserDetails(); // Fetch user details
+});
+
 </script>
 
 

@@ -43,10 +43,10 @@
         return response.json(); // Parse the response
         })
         .then((data) => {
-        console.log("Logout successful:", data); // Confirm successful logout
+            console.log("Logout successful:", data); // Confirm successful logout
         })
         .catch((error) => {
-        console.error("Logout error:", error); // Handle logout errors
+            console.error("Logout error:", error); // Handle logout errors
         });
     }
 

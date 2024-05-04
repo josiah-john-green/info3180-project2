@@ -417,6 +417,7 @@ def get_follower_count(user_id):
 def follow_status(user_id):
     try:
         user_to_check = User.query.get_or_404(user_id)  # Fetch the user
+        
         is_following = Follow.query.filter_by(
             follower_id=current_user.id,
             user_id=user_to_check.id

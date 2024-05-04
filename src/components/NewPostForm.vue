@@ -81,7 +81,7 @@
       body: form_data,
       headers: {
         'X-CSRFToken': csrf_token.value,
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${localStorage.getItem("jwt")}`
       }
     })
     .then(response => {

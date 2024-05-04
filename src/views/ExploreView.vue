@@ -59,7 +59,7 @@
             method: 'GET',
             headers: {
                 'X-CSRFToken': csrf_token.value, 
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${localStorage.getItem("jwt")}`
             },
         })
         .then((response) => response.json())
@@ -84,7 +84,7 @@
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrf_token.value, // Include CSRF token
-                'Authorization': `Bearer ${token}`                
+                'Authorization': `Bearer ${localStorage.getItem("jwt")}`                
             },
         })
         .then((response) => response.json())
