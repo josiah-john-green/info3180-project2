@@ -26,7 +26,7 @@
                 
                 <!-- Follow/Unfollow button with dynamic class and text -->
                 <button
-                    @click="toggleFollow()"
+                    @click="toggleFollow"
                     :class="[user.followed ? 'following' : 'follow']"
                 >
                     {{ user.followed ? 'Following' : 'Follow' }}
@@ -89,13 +89,18 @@ function getFollowStatus() {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${localStorage.getItem("jwt")}`,
+      'Content-Type': 'application/json',
       'X-CSRFToken': csrf_token.value,
     },
   })
     .then((response) => response.json())
     .then((data) => {
-        isFollowing.value = data.is_following; // Set follow status
-        console.log(data.is_following);
+        if (data.hasOwnProperty("is_following")) {
+            console.log("Follow status data:", data); // Log the response
+            isFollowing.value = data.is_following; // Ensure correct follow status
+        } else {
+            console.warn("Follow status response doesn't contain 'is_following'");
+        }
     })
     .catch((error) => {
       console.error("Error fetching follow status:", error);
@@ -114,6 +119,7 @@ function getUserDetails() {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${localStorage.getItem("jwt")}`,
+      'Content-Type': 'application/json',
       'X-CSRFToken': csrf_token.value,
     },
   })
@@ -121,13 +127,8 @@ function getUserDetails() {
     .then((data) => {
       user.value = data;
       postCount.value = data.posts.length;
-      followerCount.value = data.followers.length;
-
-      // Update `isFollowing` based on current user's follow status
-      const currentUserID = JSON.parse(atob(token.split(".")[1])).subject; // Ensure correct key
-      isFollowing.value = data.followers.some(
-        (f) => f.user_id === currentUserID
-      );
+      getFollowerCount();
+      getFollowStatus();
     })
     .catch((error) => {
       console.error("Error fetching user details:", error);
@@ -136,6 +137,11 @@ function getUserDetails() {
 
 function toggleFollow() {
   const token = localStorage.getItem("jwt");
+
+  if (!token) {
+    router.push({ name: 'login' });
+    return;
+  }
 
   fetch(`/api/v1/users/${user_id}/follow`, {
     method: 'POST',
@@ -147,12 +153,34 @@ function toggleFollow() {
   })
     .then((response) => response.json())
     .then((data) => {
-        if(data.message){
+        if (data.hasOwnProperty("message")) {
             isFollowing.value = !isFollowing.value; // Toggle follow status
         }
     })
     .catch((error) => {
       console.error("Error following/unfollowing:", error);
+    });
+}
+
+function getFollowerCount() {
+    const token = localStorage.getItem('jwt');
+
+    fetch(`/api/v1/users/${user_id}/follow`, {
+        method: 'GET',
+        headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrf_token.value, // Include CSRF token
+        },
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        followerCount.value = data.followers; // Set the like count
+        isFollowing.value = data.followed; // Check if the current user liked the post
+        console.log(`Follower count: ${followerCount.value}`); // Log the follower count
+    })
+    .catch((error) => {
+        console.error('Error getting follower count:', error);
     });
 }
 

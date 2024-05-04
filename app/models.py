@@ -11,10 +11,10 @@ class User(db.Model):
     password = db.Column(db.String(128), nullable=False)
     firstname = db.Column(db.String(64), nullable=False)
     lastname = db.Column(db.String(64), nullable=False)
-    email = db.Column(db.String(254), unique=True, nullable=False) 
-    location = db.Column(db.String(128), nullable=False)
-    biography = db.Column(db.String(255), nullable=False)
-    profile_photo = db.Column(db.String(128), nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False) 
+    location = db.Column(db.String(255), nullable=False)
+    biography = db.Column(db.String(700), nullable=False)
+    profile_photo = db.Column(db.String(255), nullable=False)
     joined_on = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def __init__(self, username, password, firstname, lastname, email, location, biography, profile_photo, joined_on):
@@ -51,7 +51,7 @@ class Post(db.Model):
     __tablename__ = 'posts'
 
     id = db.Column(db.Integer, primary_key=True, unique=True)
-    caption = db.Column(db.String(255))
+    caption = db.Column(db.String(700))
     photo = db.Column(db.String(255))
     user_id = db.Column(db.Integer, nullable=False)
     created_on = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
