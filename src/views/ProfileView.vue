@@ -120,8 +120,8 @@ function getFollowerCount() {
     })
     .then((response) => response.json())
     .then((data) => {
-        followerCount.value = data.followers; // Set the like count
-        isFollowing.value = data.followed; // Check if the current user liked the post
+        followerCount.value = data.followers; // Set the follower count
+        isFollowing.value = data.followed; // Check if the current user is a follower
         console.log(`Follower count: ${followerCount.value}`); // Log the follower count
     })
     .catch((error) => {

@@ -44,6 +44,7 @@ const router = createRouter({
       path: '/users/:user_id', // Ensure this path matches with your intention
       name: 'profile',
       component: ProfileView,
+      props: true, // Pass route params as component props
     },
   ],
 });

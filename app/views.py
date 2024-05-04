@@ -18,6 +18,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
 from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
 from app.forms import LoginForm, RegistrationForm, NewPostForm
 from app.models import User, Post, Follow, Like
 from flask_wtf.csrf import generate_csrf
@@ -303,14 +304,16 @@ def get_all_posts():
 
 
 # API route for likes
-@app.route('/api/v1/posts/<post_id>/like', methods=['POST'])
+@app.route('/api/v1/posts/<int:post_id>/like', methods=['POST'])
 @login_required
 @requires_auth
 def like(post_id):
-    user_id = int(current_user.get_id())  # Get the current user's ID
+    user_id = int(current_user.get_id())
 
     # Check if the user has already liked the post
-    like = db.session.execute(db.select(Like).filter_by(post_id=post_id, user_id=user_id)).scalar()
+    like = db.session.execute(
+        db.select(Like).filter_by(post_id=post_id, user_id=user_id)
+    ).scalar()
 
     if like:
         # If already liked, remove the like
@@ -324,33 +327,19 @@ def like(post_id):
         db.session.commit()
         message = "Post liked!"
 
-    # Get the updated count of likes for the post
-    likes_count = db.session.execute(db.select(func.count(Like.id)).filter_by(post_id=post_id)).scalar()
-
-    return jsonify({
-        "message": message,
-        "likes": likes_count
-    }), 200
+    return jsonify({"message": message}), 200
 
 
-@app.route('/api/v1/posts/<int:post_id>/likes', methods=['GET'])
+# API route for counting likes 
+@app.route('/api/v1/posts/<int:post_id>/like', methods=['GET'])
 @login_required
-def get_post_likes(post_id):
-    # Get all likes for the post
-    likes = db.session.query(Like).filter_by(post_id=post_id).all()
+def get_like_count(post_id):
+    # Count the number of followers for the target user
+    like_count = db.session.query(Like).filter_by(post_id=post_id).count()
 
-    # Get the current user ID
-    current_user_id = int(current_user.get_id())
-
-    # Check if the current user has liked this post
-    user_likes = any(like.user_id == current_user_id for like in likes)
-
-    # Return the total like count and whether the current user liked the post
     return jsonify({
-        "likes": len(likes),
-        "user_likes": user_likes
-    })
-
+        "likes": like_count,
+    }), 200
 
 # API route for checking if a user has liked a post
 @app.route('/api/v1/posts/<int:post_id>/like_status', methods=['GET'])
@@ -365,6 +354,7 @@ def get_like_status(post_id):
         
         # Return the like status
         return jsonify({"has_liked": has_liked}), 200
+        
     except Exception as e:
         return jsonify({"error": str(e)}), 500  # Handle errors and return a 500 status code
 
