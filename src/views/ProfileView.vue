@@ -19,7 +19,7 @@
                         <p class="post-title">Posts</p>
                     </div>
                     <div class="follower-count"> 
-                        <p class="follower-no">{{ followerCount || 0 }}</p>
+                        <p class="follower-no">{{ followerCount }}</p>
                         <p class="follower-title">Followers</p>
                     </div>
                 </div>
@@ -27,9 +27,9 @@
                 <!-- Follow/Unfollow button with dynamic class and text -->
                 <button
                     @click="toggleFollow"
-                    :class="[user.followed ? 'following' : 'follow']"
+                    :class="[isFollowing ? 'following' : 'follow']"
                 >
-                    {{ user.followed ? 'Following' : 'Follow' }}
+                    {{ isFollowing ? 'Following' : 'Follow' }}
                 </button>
             </div>       
         </div>
@@ -107,6 +107,28 @@ function getFollowStatus() {
     });
 }
 
+function getFollowerCount() {
+    const token = localStorage.getItem('jwt');
+
+    fetch(`/api/v1/users/${user_id}/follow`, {
+        method: 'GET',
+        headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrf_token.value, // Include CSRF token
+        },
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        followerCount.value = data.followers; // Set the like count
+        isFollowing.value = data.followed; // Check if the current user liked the post
+        console.log(`Follower count: ${followerCount.value}`); // Log the follower count
+    })
+    .catch((error) => {
+        console.error('Error getting follower count:', error);
+    });
+}
+
 function getUserDetails() {
   const token = localStorage.getItem("jwt");
 
@@ -138,49 +160,28 @@ function getUserDetails() {
 function toggleFollow() {
   const token = localStorage.getItem("jwt");
 
-  if (!token) {
-    router.push({ name: 'login' });
-    return;
-  }
-
   fetch(`/api/v1/users/${user_id}/follow`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem("jwt")}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
       'X-CSRFToken': csrf_token.value,
     },
   })
     .then((response) => response.json())
     .then((data) => {
-        if (data.hasOwnProperty("message")) {
-            isFollowing.value = !isFollowing.value; // Toggle follow status
+      if (data.message) {
+        isFollowing.value = !isFollowing.value; // Toggle follow status
+
+        if (isFollowing.value) {
+          followerCount.value += 1; // Increment follower count when following
+        } else {
+          followerCount.value -= 1; // Decrement follower count when unfollowing
         }
+      }
     })
     .catch((error) => {
       console.error("Error following/unfollowing:", error);
-    });
-}
-
-function getFollowerCount() {
-    const token = localStorage.getItem('jwt');
-
-    fetch(`/api/v1/users/${user_id}/follow`, {
-        method: 'GET',
-        headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrf_token.value, // Include CSRF token
-        },
-    })
-    .then((response) => response.json())
-    .then((data) => {
-        followerCount.value = data.followers; // Set the like count
-        isFollowing.value = data.followed; // Check if the current user liked the post
-        console.log(`Follower count: ${followerCount.value}`); // Log the follower count
-    })
-    .catch((error) => {
-        console.error('Error getting follower count:', error);
     });
 }
 
