@@ -9,6 +9,7 @@ This file creates your application.
 
 import os
 import jwt
+import secrets
 from datetime import datetime, timedelta
 from functools import wraps
 from datetime import datetime
@@ -469,10 +470,14 @@ def follow_status(user_id):
 # API route for retrieving CSRF token
 @app.route('/api/v1/csrf-token', methods=['GET'])
 def get_csrf():
-    return jsonify({'csrf_token': generate_csrf()})
+    try:
+        csrf_token = generate_csrf()  # Ensure this function call works correctly
+        return jsonify({'csrf_token': csrf_token})  # Return valid JSON
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500  # Catch any errors and return 500
 
 
-# API route for 
+# API route for generatiing JWT token
 def generate_token(uid):
     timestamp = datetime.utcnow()
     payload = {

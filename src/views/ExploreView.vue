@@ -150,9 +150,9 @@ function toggleLike(post) {
     .then((response) => response.json())
     .then((data) => {
         if(data.message){
-            isLiked = !isLiked;
+            isLiked.value = !isLiked.value;
 
-            if (isLiked) {
+            if (isLiked.value) {
                 likeCount.value += 1; 
             } else {
                 likeCount.value -= 1; 
