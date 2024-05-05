@@ -207,7 +207,9 @@ onMounted(() => {
 
     .profileHeader {
         display: grid;
-        grid-template-columns: 50px 750px 50px;
+        grid-template-columns: 50px minmax(200px, 550px) 50px;
+        min-width: 400px; 
+        max-width: auto;
         gap: 100px;
     }
 

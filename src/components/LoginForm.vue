@@ -117,12 +117,14 @@
 
 .btn {
   display: inline-block;
-  padding: 7px 306px;
+  padding: 7px;
+  min-width: 570px;
+  max-width: auto;
   color: white;
   background-color: #7dd220;
   text-decoration: none;
   border-radius: 5px;
-  transition: 0.3s ease-in-out;
+  /* transition: 0.3s ease-in-out; */
   cursor: pointer;
 }
 
