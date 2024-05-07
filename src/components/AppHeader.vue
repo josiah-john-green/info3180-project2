@@ -49,6 +49,12 @@ const token = localStorage.getItem("jwt");
 console.log(token);
 
 function goToProfile() {
+  
+  // Retrieve JWT from local storage
+  const token = localStorage.getItem("jwt");
+
+  // Check if token exists
+  console.log(token);
 
   if (token) {
 

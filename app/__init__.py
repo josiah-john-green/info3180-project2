@@ -6,7 +6,6 @@ from flask_wtf.csrf import CSRFProtect
 from flask_jwt_extended import JWTManager
 from app.config import Config
 
-
 # Initialize Flask application
 app = Flask(__name__)
 app.config.from_object(Config)

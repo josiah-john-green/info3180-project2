@@ -2,15 +2,15 @@
   <div class="postContainer">
     <form class="postForm shadow p-4 mb-5 bg-white rounded" method="POST" enctype="multipart/form-data" @submit.prevent="savePost" id="postForm">
       <div class="form-group mb-3">
-        <label for="caption" class="form-label">Caption</label>
-        <textarea id="caption" name="caption" class="form-control" v-model="formData.caption"></textarea>
-        <small v-if="formData.caption === ''" class="text-danger">Caption is required</small>
-      </div>
-      
-      <div class="form-group mb-3">
         <label for="photo" class="form-label">Photo</label>
         <input type="file" id="photo" name="photo" class="form-control" @change="handleFileChange">
         <small v-if="formData.photo === null" class="text-danger">Photo is required</small>
+      </div>      
+      
+      <div class="form-group mb-3">
+        <label for="caption" class="form-label">Caption</label>
+        <textarea id="caption" name="caption" class="form-control" v-model="formData.caption"></textarea>
+        <small v-if="formData.caption === ''" class="text-danger">Caption is required</small>
       </div>
 
       <!-- Submit button -->

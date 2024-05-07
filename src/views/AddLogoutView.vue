@@ -58,8 +58,12 @@
             const token = localStorage.getItem('jwt'); // Retrieve JWT from local storage
 
             if (token) {
+                console.log('This is the logout before token:', token);
                 localStorage.removeItem('jwt'); // Remove the JWT from local storage
+                console.log('This is the logout after token:', token);
+                console.log('This is the csrf before token:', csrfToken);
                 logout(csrfToken); // Call the logout function with CSRF token
+                console.log('This is the csrf after token:', csrfToken);
                 router.push({ name: 'home' }); // Redirect after logout
             } else {
                 router.push({ name: 'login' }); // Redirect to login if no JWT
