@@ -13,8 +13,9 @@
         <small v-if="formData.password === ''" class="text-danger">Password is required</small>
       </div>
 
-      
-      <button type="submit" class="btn">Login</button>
+      <div class="form-group mb-3">
+        <button type="submit" class="btn">Login</button>
+      </div>
 
       <div v-if="loginError" class="text-danger">{{ loginError }}</div>
     </form>
@@ -82,7 +83,6 @@
 
   }
 
-  //
   function clearForm(){
       var inputs = document.querySelectorAll('input');
       var textArea = document.querySelectorAll('textarea');
@@ -117,12 +117,8 @@
 }
 
 .btn {
-  display: inline-block;
+  width: 100%; /* Matches the button's width to the form's width */
   padding: 7px;
-  min-width: 700px;
-  max-width: auto; 
-  min-width: 570px;
-  max-width: auto;
   color: white;
   background-color: #7dd220;
   text-decoration: none;

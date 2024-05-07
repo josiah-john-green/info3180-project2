@@ -206,11 +206,25 @@ onMounted(() => {
     }
 
     .profileHeader {
-        display: grid;
-        grid-template-columns: 50px minmax(200px, 550px) 50px;
-        min-width: 400px; 
-        max-width: auto;
-        gap: 100px;
+      display: grid;
+      /* Use minmax for flexibility: first column min 150px, second column flexible, third column 50px */
+      grid-template-columns: minmax(100px, 150px) minmax(200px, 850px) 50px;
+      gap: 10px; /* Add some spacing between columns */
+      align-items: center; /* Align content vertically */
+      overflow: hidden;
+    }
+
+    @media (min-width: 1220px){
+      .profileHeader{
+        grid-template-columns: minmax(100px, 150px) minmax(200px, 850px) 50px;
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .profileHeader {
+        /* For larger screens, increase the width of the first column */
+        grid-template-columns: minmax(100px, 150px) minmax(100px, 600px) 100px; /* More space for the first and third columns */
+      }
     }
 
     .profileBody {

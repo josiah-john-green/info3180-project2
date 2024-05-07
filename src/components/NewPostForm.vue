@@ -14,7 +14,9 @@
       </div>
 
       <!-- Submit button -->
-      <button type="submit" class="btn">Submit</button>
+      <div class="form-group mb-3">
+        <button type="submit" class="btn">Submit</button>
+      </div>
 
       <div v-if="postError" class="text-danger">{{ postError }}</div>
     </form>
@@ -135,11 +137,14 @@
     width: 50%;
   }
   
+  .form-group{
+        padding-bottom: 15px;
+  }
+
   .btn {
     display: inline-block;
+    width: 100%;
     padding: 7px;
-    min-width: 570px;
-    max-width: auto;
     color: white;
     background-color: #7dd220;
     text-decoration: none;

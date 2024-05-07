@@ -50,7 +50,10 @@
                 <small v-if="formData.profile_photo === null" class="text-danger"> Photo is required</small>
             </div>
 
-            <button type="submit" class="btn">Register</button>
+            <div class="form-group mb-3">
+                <button type="submit" class="btn">Register</button>
+            </div>
+
 
             <div v-if="registrationError" class="text-danger">{{ registrationError }}</div>
         </form>
@@ -175,9 +178,14 @@
         width: 50%;
     }
 
+    .form-group{
+        padding-bottom: 15px;
+    }
+
     .btn {
+        width: 100%;
+        padding: 10px;
         display: inline-block;
-        padding: 7px 302px;
         color: white;
         background-color: #7dd220;
         text-decoration: none;
