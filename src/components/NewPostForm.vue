@@ -1,12 +1,12 @@
-<template>    
+<template>     
   <div class="postContainer">
     <form class="postForm shadow p-4 mb-5 bg-white rounded" method="POST" enctype="multipart/form-data" @submit.prevent="savePost" id="postForm">
       <div class="form-group mb-3">
         <label for="photo" class="form-label">Photo</label>
         <input type="file" id="photo" name="photo" class="form-control" @change="handleFileChange">
         <small v-if="formData.photo === null" class="text-danger">Photo is required</small>
-      </div>      
-      
+      </div>     
+       
       <div class="form-group mb-3">
         <label for="caption" class="form-label">Caption</label>
         <textarea id="caption" name="caption" class="form-control" v-model="formData.caption"></textarea>
@@ -137,7 +137,9 @@
   
   .btn {
     display: inline-block;
-    padding: 7px 300px;
+    padding: 7px;
+    min-width: 570px;
+    max-width: auto;
     color: white;
     background-color: #7dd220;
     text-decoration: none;
