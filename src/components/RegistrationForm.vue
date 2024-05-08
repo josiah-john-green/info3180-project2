@@ -1,7 +1,6 @@
 <template>    
     <div class="registrationContainer">
         <form class="registrationForm shadow p-3 mb-5 bg-white rounded" method="POST" enctype="multipart/form-data" @submit.prevent="saveRegistration" id="registrationForm">
-        
             <div class="form-group mb-3">
                 <label for="username" class="form-label">Username</label>
                 <input type="text" id="username" name="username" class="form-control" v-model="formData.username">
